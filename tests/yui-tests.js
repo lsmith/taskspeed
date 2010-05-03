@@ -153,8 +153,10 @@ window.tests = {
 	},
 	
 	"finale": function(){
-		// Same as other library's empty methods
-		document.body.innerHTML = '';
+		var body = document.body;
+		while ( body.firstChild ) {
+			body.removeChild(body.firstChild);
+		}
 		return YAHOO.util.Selector.query('body *').length;
 	}
 	

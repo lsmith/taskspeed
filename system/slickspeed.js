@@ -12,7 +12,7 @@ window.onload = function(){
 	
 	forEach(document.getElementsByTagName('iframe'), function(iframe){
 		frameworks[iframe.name] = {
-			'test': window.frames[iframe.name].test,
+			'test': iframe.contentWindow.test,
 			'selectors': []
 		};
 	});
@@ -20,6 +20,7 @@ window.onload = function(){
 	var tbody = document.getElementById('tbody');
 	var tfoot = document.getElementById('tfoot');
 	var lastrow = tfoot.getElementsByTagName('tr')[0];
+	var rows = [];
 	
 	var controls = document.getElementById('controls');
 	
@@ -29,6 +30,13 @@ window.onload = function(){
 	var stop = links[0];
 	
 	start.onclick = function(){
+		// randomize tests within rows
+		tests.sort(function(a,b) { 
+			if (a.row_num == b.row_num)
+				return Math.random() < 0.5 ? 1: -1
+			else
+				return a.row_num - b.row_num;
+		});
 		testRunner();
 		return false;
 	};
@@ -58,6 +66,7 @@ window.onload = function(){
 	forEach(window.selectors, function(selector, i){
 		var frxi = 0;
 		var row = tbody.getElementsByTagName('tr')[i];
+ 		rows[i] = 0;
 		for (var name in frameworks){
 			var framework = frameworks[name];
 			var cell = row.getElementsByTagName('td')[frxi];
@@ -66,12 +75,15 @@ window.onload = function(){
 				'selector': framework.selectors[i],
 				'name': name,
 				'row': row,
-				'cell' : cell
+				'cell' : cell,
+				'row_num': i
 			});
+			rows[i]++;
 			frxi++;
 		}
 	});
 	
+	var submitRun = false;
 	var submitTest = function(data){
 		
 		if(!data || !confirm("Yo! Click OK to send the results back for charting")){
@@ -84,13 +96,16 @@ window.onload = function(){
 		}
 		
 		var s = document.createElement('script');
-		s.src = "frameworks/dojo-130.js";
+		s.src = "frameworks/dojo-131.js";
 		var h = document.getElementsByTagName("head")[0];
 		s.onload = s.onreadystatechange = function(e){
 			if((e && e.type == "load") || /loaded|complete/.test(s.readyState)){
 				dojo.xhrPost({ 
 					url:"report.php",
-					content: { data: dojo.toJson(pay) }
+					content: { data: dojo.toJson(pay) },
+					load:function(){
+						submitRun = true;
+					}
 				});
 			}
 		}
@@ -107,7 +122,7 @@ window.onload = function(){
 		}
 		var results = test.execute(test.selector);
 		test.cell.className = 'test';
-		test.cell.innerHTML = '<b>'+results.time + ' ms</b><b>' + results.found + ' found</b>';
+		test.cell.innerHTML = '<b>' + results.time + ' ms</b><b>' + results.found + ' found</b>';
 		test.cell.speed = results.time;
 		if (results.error){
 			test.cell.innerHTML = results.time + ' ms | <span class="exception" title="' + results.error + '">error returned</a>';
@@ -134,7 +149,8 @@ window.onload = function(){
 		score[test.name] += test.cell.speed;
 		scores[test.name].innerHTML =  '&nbsp;' + score[test.name] + '&nbsp;';
 		
-		if (test.cell == test.row.lastChild) colourRow(test.row);
+		rows[test.row_num]--;
+		if(rows[test.row_num] == 0) colourRow(test.row);
 		timer = setTimeout(testRunner, 125);
 	};
 	
@@ -157,6 +173,8 @@ window.onload = function(){
 		
 		var min = Math.min.apply(this, speeds);
 		var max = Math.max.apply(this, speeds);
+		// FIXME: is this a good way? should we mean the speeds? median?
+		var threshold = min; // Math.floor(min / 2); // ms
 		
 		var found = [];
 		var mismatch = false;
@@ -170,8 +188,11 @@ window.onload = function(){
 					}
 				});
 			}
-			if (cell.speed == min) cell.className += ' good';
-			else if (cell.speed == max) cell.className += ' bad';
+			
+			var s = cell.speed;
+			if (s == min) cell.className += ' best';
+			else if (s <= min + threshold) cell.className += ' good';
+			else if (s >= max - threshold) cell.className += ' bad';
 			else cell.className += ' normal';
 		});
 		

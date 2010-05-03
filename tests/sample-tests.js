@@ -36,6 +36,9 @@ window.tests = {
 		//	set the rel="" attribute of those nodes to 'touched'
 		//	disconnect the mouseover event
 		//	return the length of the connected nodes
+		//	note: either create an anonymous function to reference once,
+		//	or use the library public "no-op" function to avoid creating
+		//	a function object for each iteration.
 	},
 
 	"table": function(){
@@ -92,7 +95,7 @@ window.tests = {
 	"sethtml": function(){
 		// replace the content of all div elements with "<p>new content</p>"
 		//
-		// return the length of matched divs
+		// return the length of number of divs in the page POST setting operation (eg: re-requery "div")
 	},
 	
 	"insertbefore" : function(){

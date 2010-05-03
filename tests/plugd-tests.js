@@ -26,9 +26,10 @@ window.tests = {
 	},
 	
 	"bindattr" : function(){
+		var someFn = function(){};
 		return $("ul > li")
 			.forEach(function(n){
-				var c = dojo.connect(n, "mouseover", function(){ });
+				var c = dojo.connect(n, "mouseover", someFn);
 				dojo.attr(n, "rel", "touched");
 				dojo.disconnect(c);
 			})
@@ -70,7 +71,8 @@ window.tests = {
 	},
 	
 	"sethtml": function(){
-		return $("div").addContent("<p>new content</p>", "only").length;
+		$("div").addContent("<p>new content</p>", "only");
+		return $("div").length;
 	},
 	
 	"insertbefore" : function(){
