@@ -3,35 +3,34 @@ window.tests = {
 	
 	"make" : function(){	
 		var ul, i;
+
 		for ( i = 0; i < 250; i++ ) {
-			ul = Y.Node.create('<ul></ul>');
-			ul.addClass('fromcode');
-			ul.set('id', 'setid'+i).set('innerHTML', '<li>one</li><li>two</li><li>three</li>');
-			Y.get('body').appendChild(ul);
+            // Maybe the instructions should be updated on this one.  They
+            // call for adding the LIs as the last step after appending to
+            // the DOM, but every solution set is adding the LIs before
+            // appending
+            Y.one('body').append(
+                '<ul class="fromcode" id="setid' + i + '">' +
+                    '<li>one</li><li>two</li><li>three</li>' +
+                '</ul>');
 		}
+
 		return Y.all('ul.fromcode').size();
 	},
 	
 	"indexof" : function(){
-		// can we do better here? This isn't pretty
-		var target, item, index, i;
+		var index;
+
 		for ( i = 0; i < 20; i++ ) {
-			item = 0;
-			index = 0;
-			target = Y.get('#setid150');
-			Y.all('ul').each(function(n){
-				if ( n.compareTo(target) ) {
-					index = item;
-				}
-				item ++;
-			});
+            index = Y.all('ul').indexOf( Y.one('#setid150') );
 		}
 		return index;
 	},
 	
 	"bind" : function(){
-		var subscriber = function(){};
-		return Y.all('ul > li').on('click', subscriber).length;
+        var items = Y.all('ul > li');
+        items.on('click', function () {});
+		return items.size();
 	},
 	
 	"attr" : function(){
@@ -39,87 +38,70 @@ window.tests = {
 	},
 	
 	"bindattr" : function(){
-		var nodes = Y.all('ul > li'),
-			subscriber = function(){};
+        function subscriber() {}
+
+		var nodes = Y.all('ul > li');
+
 		nodes.on('mouseover', subscriber);
-		nodes.set('rel', 'touched');
-		nodes.detach('mouseover', subscriber);
+		nodes.set('rel', 'touched')
+		     .detach('mouseover');
+
 		return nodes.size();
 	},
 
 	"table": function(){
-		var table, i;
+		var body, i;
 		for ( i = 0; i < 40; i++ ) {
-			table = Y.Node.create('<table class="madetable"></table>');
-			Y.get('body').appendChild(table);
-			table.set('innerHTML', '<tr><td>first</td></tr>');
-			table.query('td').get('parentNode').insertBefore(Y.Node.create('<td></td>'));
+            body = Y.one('body');
+            body.appendChild(body.create('<table class="madetable"></table>'))
+			    .appendChild(body.create('<tr><td>first</td></tr>'))
+			    .prepend('<td>before</td>');
 		}
 		return Y.all('tr td').size();
 	},
 	
 	"addanchor" : function(){
-		return Y.all('.fromcode > li').set('innerHTML', '<a href="http://example.com">link</a>').length;
+		return Y.all('.fromcode > li').append('<a href="http://example.com">link</a>').size();
 	},
 
 	"append" : function(){
 		// Selector failing on "div[rel^='foo2']"
 		for ( var i = 0; i < 500; i++ ) {
-			Y.get('body').appendChild(Y.Node.create('<div rel="foo2"></div>'));
+			Y.one('body').append('<div rel="foo2"></div>');
 		}
 		return Y.all("div[rel^='foo2']").size();
 	},
 	
 	"addclass-odd" : function(){
-		// using ':nth-child(even)' because others start counting at 0
-		var divs = Y.all('div'),
-			odds = [],
-			i = 0;
-		divs.addClass('added');
-		divs.each(function(div){
-			if ( i % 2 === 1 ) {
-				odds.push(div.addClass('odd'));
-			}
-			i++;
-		});
-		return odds.length;
+		return Y.all('div').addClass('added').odd().addClass('odd').size();
 	},
 	
 	"style": function(){
-		return Y.all('.added').setStyles({ 'background-color':'#ededed', 'color':'#fff' }).length;
+		return Y.all('.added').setStyles({ 'background-color':'#ededed', 'color':'#fff' }).size();
 	},
 	
 	"removeclass": function(){
-		return Y.all('.added').removeClass('added').length;
+		return Y.all('.added').removeClass('added').size();
 	},
 	
 	"sethtml": function(){
-		Y.all('div').set('innerHTML', '<p>new content</p>');
-		return Y.all('div').length;
+		return Y.all('div').setContent('<p>new content</p>').refresh().size();
 	},
 	
 	"insertbefore" : function(){
-		return Y.all('.fromcode a').insertBefore(Y.Node.create('<p>A Link</p>')).length;
+		return Y.all('.fromcode a').insert('<p>A Link</p>','before').size();
 	},
 	
 	"insertafter" : function(){
-		return Y.all('.fromcode a').appendChild(Y.Node.create('<p>After Link</p>')).length;
+		return Y.all('.fromcode a').insert('<p>After Link</p>','after').size();
 	},
 	
 	"destroy": function(){ 
-		var nodes = Y.all('.fromcode');
-		nodes.each(function(node){
-			node.get('parentNode').removeChild(node);
-		});
-		return nodes.size();
+		return Y.all('.fromcode').remove().size();
 	},
 	
 	"finale": function(){
-		var body = Y.get('body'),
-			nodes;
-		body.set('innerHTML', '');
-		nodes = Y.all('body *');
-		return (nodes ? nodes.size() : 0);
+		return Y.all('body > *').remove().refresh().size();
 	}
 	
 };
